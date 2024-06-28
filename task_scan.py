@@ -137,6 +137,47 @@ class Task:
                         else:
                             if item.created_time + timedelta(minutes=P.ModelSetting.get_int("scan_max_wait_time")) < now:
                                 item.set_status("FINISH_TIMEOVER")
+                    elif item.mode == 'VFS_REFRESH':
+                        item.filecheck_count += 1
+                        now = datetime.now()
+                        item.set_status('VFS_REFRESH', save=True)
+                        try:
+                            rclone = F.PluginManager.get_plugin_instance('rclone')
+                            cmd = [rclone.ModelSetting.get('rclone_path'), 'rc', 'vfs/refresh']
+
+                            for rule in vfs_rules:
+                                tmps = rule.split('|')
+                                if len(tmps) != 3 and len(tmps) != 5: continue
+                                cmd += [f"--rc-addr={tmps[2]}", f"_async=false"]
+                                if len(tmps) == 5: cmd += [f"--rc-user={tmps[3]}", f"--rc-pass={tmps[4]}"]
+                                if item.target.startswith(tmps[0]) == False:
+                                    continue
+                                remote = item.target.replace(tmps[0], tmps[1]).replace('\\', '/').replace('//', '/')
+                                call_remote = remote.rsplit('/', 1)[0]
+                                is_ok = False
+                                while True:
+                                    cmd.append(f'dir={call_remote}')
+                                    result = SupportSubprocess.execute_command_return(cmd)
+                                    logger.info(' '.join(cmd))
+                                    logger.debug(f"vfs/refresh : {result}")
+                                    vfs_ret = json.loads(result['log'].replace('\n', ''))
+                                    logger.info(vfs_ret['result'][call_remote])
+
+                                    if vfs_ret['result'][call_remote] == 'file does not exist':
+                                        call_remote = call_remote.rsplit('/', 1)[0]
+                                        if call_remote == '':
+                                            break
+                                        del cmd[-1]
+                                    else:
+                                        is_ok = True
+                                        break
+                                if is_ok:
+                                    item.set_status('FINISH_VFS_REFRESH', save=True)
+                                    break
+                        except Exception as e: 
+                            logger.error(f"Exception:{str(e)}")
+                            logger.error(traceback.format_exc())
+
                     elif item.mode == 'REFRESH':
                         item.filecheck_count += 1
                         now = datetime.now()
