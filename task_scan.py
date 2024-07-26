@@ -69,10 +69,10 @@ class Task:
                                 for rule in vfs_rules:
                                     tmps = rule.split('|')
                                     if len(tmps) != 3 and len(tmps) != 5: continue
-                                    cmd += [f"--rc-addr={tmps[2]}", f"_async=false"]
-                                    if len(tmps) == 5: cmd += [f"--rc-user={tmps[3]}", f"--rc-pass={tmps[4]}"]
                                     if item.target.startswith(tmps[0]) == False:
                                         continue
+                                    cmd += [f"--rc-addr={tmps[2]}", f"_async=false"]
+                                    if len(tmps) == 5: cmd += [f"--rc-user={tmps[3]}", f"--rc-pass={tmps[4]}"]
                                     remote = item.target.replace(tmps[0], tmps[1]).replace('\\', '/').replace('//', '/')
 
                                     # 현시점 파일인지, 폴더인지 모름
@@ -148,10 +148,10 @@ class Task:
                             for rule in vfs_rules:
                                 tmps = rule.split('|')
                                 if len(tmps) != 3 and len(tmps) != 5: continue
-                                cmd += [f"--rc-addr={tmps[2]}", f"_async=false"]
-                                if len(tmps) == 5: cmd += [f"--rc-user={tmps[3]}", f"--rc-pass={tmps[4]}"]
                                 if item.target.startswith(tmps[0]) == False:
                                     continue
+                                cmd += [f"--rc-addr={tmps[2]}", f"_async=false"]
+                                if len(tmps) == 5: cmd += [f"--rc-user={tmps[3]}", f"--rc-pass={tmps[4]}"]
                                 remote = item.target.replace(tmps[0], tmps[1]).replace('\\', '/').replace('//', '/')
                                 call_remote = remote.rsplit('/', 1)[0]
                                 is_ok = False
